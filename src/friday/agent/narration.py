@@ -5,7 +5,9 @@ from ``agent/templates.py``; this module only selects and composes it.
 
 - ``start_line`` / ``done_line`` / ``error_line``: Tool status lines (Req 4.4, 4.5, 4.11).
 - ``parse_reply``: splits the LLM's ``<display>``/``<spoken>`` reply (design: Narration).
-- ``next_step_offer``: the offer appended to a response (Req 8.1, 8.2, 8.3, 8.5).
+
+The next-step offer is no longer composed here: the model writes its own offer, driven by
+the ``OFFERS_RULE`` system prompt, using the conversation history.
 
 - ``grounded_numbers`` / ``guard``: the narration guard that enforces number grounding,
   no data rows, and the spoken-word limit (Req 4.2, 4.3, 4.10, 9.5).
@@ -15,69 +17,21 @@ import contextlib
 import json
 import re
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
 from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal
 from types import MappingProxyType
-from typing import Final, Protocol, Self, cast
+from typing import Final, cast
 
 from friday.agent.templates import (
-    ACTION_LABELS,
     DONE_LINE,
-    FETCH,
-    FETCH_QUESTION,
-    FILL,
     TOOL_NAMES,
     ToolName,
     error_text,
-    missing_values_text,
-    next_actions_text,
     start_text,
 )
 from friday.constants import MAX_SPOKEN_WORDS
-from friday.data.dataset import Dataset, SessionView
+from friday.data.dataset import SessionView
 
 _TOOLS: Final[Mapping[str, ToolName]] = MappingProxyType({name: name for name in TOOL_NAMES})
-
-# --- Turn outcomes -----------------------------------------------------------
-
-
-class OutcomeView(Protocol):
-    """What ``next_step_offer`` needs to know about one Tool call of the turn.
-
-    The application-layer ``ToolOutcome`` (``agent/tools.py``) satisfies this
-    structurally by exposing these three read-only attributes, or converts itself with
-    ``CallOutcome``. A rejected call (validation error, no-data stop) counts as failed.
-    """
-
-    @property
-    def tool(self) -> str:
-        """The Tool's LLM name, e.g. ``"fetch_data"``."""
-        ...
-
-    @property
-    def ok(self) -> bool:
-        """Whether the call succeeded."""
-        ...
-
-    @property
-    def missing_count(self) -> int:
-        """For a successful fetch, Missing_Values in the new Dataset; otherwise ``0``."""
-        ...
-
-
-@dataclass(frozen=True)
-class CallOutcome:
-    """A plain ``OutcomeView``: one Tool call's name, success flag, and fetch gap count."""
-
-    tool: str
-    ok: bool
-    missing_count: int = 0
-
-    @classmethod
-    def fetched(cls, dataset: Dataset) -> Self:
-        """The outcome of a successful fetch that produced ``dataset``."""
-        return cls(FETCH, True, dataset.missing_count)
-
 
 # --- Status lines (Req 4.4, 4.5, 4.11) ------------------------------------------
 
@@ -203,39 +157,6 @@ def parse_reply(text: str) -> tuple[str, str]:
     if not spoken:
         spoken = _clean_spoken(split_sentences(display)[:FALLBACK_SENTENCES])
     return display, spoken
-
-
-# --- Next-step offer (Req 8.1, 8.2, 8.3, 8.5) ------------------------------------
-
-
-def _session_has_missing(session: SessionView) -> bool:
-    """Whether any Session Dataset still has a Missing_Value."""
-    return any(ds.missing_count > 0 for ds in session.datasets.values())
-
-
-def next_step_offer(outcomes: Sequence[OutcomeView], session: SessionView) -> str | None:
-    """Return the offer that ends this turn's response, or ``None`` for no offer.
-
-    - Any failed call in the turn, or no call at all, means no offer (Req 8.5).
-    - After a fetch (the last successful call): the Missing_Value note when the fetched
-      Dataset has gaps, then the stats-or-plot question, always last (Req 8.1, 8.2).
-    - After stats, fill, or plot: "Next, I can …" naming the other actions;
-      "fill missing values" only if some Session Dataset has a Missing_Value (Req 8.3).
-    """
-    if not outcomes or any(not outcome.ok for outcome in outcomes):
-        return None
-    last = outcomes[-1]
-    if last.tool == FETCH:
-        if last.missing_count > 0:
-            return f"{missing_values_text(last.missing_count)} {FETCH_QUESTION}"
-        return FETCH_QUESTION
-    if last.tool not in ACTION_LABELS:
-        return None
-    has_missing = _session_has_missing(session)
-    actions: list[ToolName] = [
-        tool for tool in ACTION_LABELS if tool != last.tool and (tool != FILL or has_missing)
-    ]
-    return next_actions_text(actions) if actions else None
 
 
 # --- Narration guard (Req 4.2, 4.3, 4.10, 9.5) ------------------------------

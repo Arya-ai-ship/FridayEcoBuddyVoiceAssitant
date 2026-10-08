@@ -172,18 +172,17 @@ class Agent:
     async def _handle_success(
         self, session: Session, turn: TurnContext, response: Any
     ) -> AsyncIterator[Event]:
-        """Parse, guard, offer, synthesize, and emit ``final(outcome=ok)`` (Req 5.10, 8.1-8.5)."""
+        """Parse, guard, synthesize, and emit ``final(outcome=ok)`` (Req 5.10).
+
+        The next-step offer is written by the model itself (``OFFERS_RULE``), so nothing is
+        appended here; ``guard`` only reserves the turn's spoken status-line words.
+        """
         stored = await self._complete_history(session, response, stop_text=None)
         results = [*_tool_result_texts(stored), *(o.result_json for o in turn.outcomes)]
         display, spoken = narration.parse_reply(response.text or "")
-        offer = narration.next_step_offer(turn.outcomes, session)
-        offer_words = len(offer.split()) if offer else 0
         display, spoken = narration.guard(
-            display, spoken, grounded_numbers(session, results), turn.status_words + offer_words
+            display, spoken, grounded_numbers(session, results), turn.status_words
         )
-        if offer:
-            display = f"{display}\n\n{offer}" if display else offer
-            spoken = f"{spoken} {offer}".strip()
         audio, audio_error = await self._synthesize(spoken)
         yield turn.events.final("ok", display, spoken, audio=audio, audio_error=audio_error)
 
