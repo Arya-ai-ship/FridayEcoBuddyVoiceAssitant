@@ -8,12 +8,37 @@
     <script type="module" src="/static/js/app.js"></script>
   </head>
   <body>
-    <header class="app-header">
-      <h1>Friday</h1>
-      <p class="tagline">Your next-gen eco-buddy</p>
-    </header>
+    <!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+    <aside class="sidebar" aria-label="Friday assistant panel">
+      <div class="sidebar-top">
+        <div class="brand">
+          <span class="brand-icon" aria-hidden="true">◈</span>
+          <div class="brand-text">
+            <h1 class="brand-name">Friday</h1>
+            <p class="brand-tagline">Your next-gen eco-buddy</p>
+          </div>
+        </div>
 
-    <main class="layout">
+        <div class="orb-wrap">
+          <div
+            id="voice-orb"
+            class="orb"
+            role="img"
+            data-state="idle"
+            aria-label="Friday is idle"
+          ></div>
+          <p class="orb-label" aria-hidden="true">Voice assistant</p>
+        </div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <p class="hint">Type below or tap the mic<br />to talk with Friday.</p>
+      </div>
+    </aside>
+
+    <!-- ── Main ─────────────────────────────────────────────────────────── -->
+    <div class="main-col">
+      <!-- Chat log -->
       <section
         id="chat-log"
         class="chat-window"
@@ -22,43 +47,51 @@
         aria-label="Conversation with Friday"
       ></section>
 
-      <aside class="orb-pane">
-        <div
-          id="voice-orb"
-          class="orb"
-          role="img"
-          data-state="idle"
-          aria-label="Friday is idle"
-        ></div>
-      </aside>
-    </main>
+      <!-- Notice bar (errors / mic status) -->
+      <p id="notice" class="notice" role="status" aria-live="polite"></p>
 
-    <form id="composer" class="composer" aria-label="Send a message to Friday">
-      <label class="visually-hidden" for="chat-input">Message Friday</label>
-      <textarea
-        id="chat-input"
-        class="chat-input"
-        rows="1"
-        maxlength="2000"
-        placeholder="Ask Friday to pull an indicator, e.g. please pull inflation"
-        autocomplete="off"
-        enterkeyhint="send"
-      ></textarea>
-      <button id="send-button" class="send-button" type="submit" aria-label="Send message">
-        <span aria-hidden="true">➤</span>
-      </button>
-      <button
-        id="mic-button"
-        class="mic-button"
-        type="button"
-        aria-pressed="false"
-        aria-label="Start voice input"
-        title="Talk to Friday"
-      >
-        <span aria-hidden="true">🎙</span>
-      </button>
-    </form>
-
-    <p id="notice" class="notice" role="status" aria-live="polite"></p>
+      <!-- Composer -->
+      <form id="composer" class="composer" aria-label="Send a message to Friday">
+        <label class="visually-hidden" for="chat-input">Message Friday</label>
+        <textarea
+          id="chat-input"
+          class="chat-input"
+          rows="1"
+          maxlength="2000"
+          placeholder="Ask Friday anything — e.g. pull inflation data"
+          autocomplete="off"
+          enterkeyhint="send"
+        ></textarea>
+        <div class="composer-actions">
+          <button
+            id="mic-button"
+            class="icon-btn mic-button"
+            type="button"
+            aria-pressed="false"
+            aria-label="Start voice input"
+            title="Talk to Friday"
+          >
+            <!-- Mic SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true" width="18" height="18">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+              <line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+          </button>
+          <button id="send-button" class="icon-btn send-button" type="submit" aria-label="Send message">
+            <!-- Send SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              aria-hidden="true" width="18" height="18">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
   </body>
 </html>

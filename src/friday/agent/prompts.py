@@ -28,9 +28,15 @@ from friday.agent.templates import (
     start_text,
 )
 from friday.agent.tool_args import DATE_FORMAT
-from friday.constants import MAX_SPOKEN_SENTENCES, MAX_SPOKEN_WORDS, MAX_TOOL_CALLS
+from friday.constants import (
+    MAX_MISSING_DATES_LISTED,
+    MAX_SPOKEN_SENTENCES,
+    MAX_SPOKEN_WORDS,
+    MAX_TOOL_CALLS,
+)
 from friday.data.dataset import Dataset, SessionView
 from friday.data.dates import END_FIELD, START_FIELD
+from friday.data.indicators import IndicatorEntry, IndicatorMap
 from friday.data.plot import IDS_FIELD
 from friday.errors import FredError, UnknownIndicator
 
@@ -73,6 +79,22 @@ TOOLS_RULE: Final = (
     f"text. Make at most {MAX_TOOL_CALLS} tool calls for one user message."
 )
 """Req 5.4, 5.5, 5.9."""
+
+ANSWER_FROM_CONTEXT_RULE: Final = (
+    "Think like an economist first, and only reach for a tool when it will actually add "
+    "something. Before calling a tool, check what you already have: the fetch results and "
+    "the dataset list in this conversation already give you each dataset's indicator, "
+    "series, date range, row count, missing-value count, and the exact dates of any "
+    "missing values. If the question can be answered from that context or from sound "
+    "economic reasoning, answer directly instead of calling a tool. For example, when "
+    f"{BOSS} asks where a missing value is, read it off the missing-value dates you "
+    "already have rather than running statistics. Call a tool only to fetch new data, "
+    "produce statistics, fill gaps, or draw a chart that you cannot already report. You "
+    "may interpret and explain what the data means, but the specific numbers and dates you "
+    "state must still come from a tool result or the dataset list, never from memory."
+)
+"""Autonomy: reason over the context already present and skip tool calls that would not add
+information, while keeping stated numbers/dates grounded (Req 4.2, 5.5)."""
 
 ARGUMENTS_RULE: Final = (
     f"Write dates as {DATE_FORMAT} ({START_FIELD}, {END_FIELD}). Omit {DATASET_ID_ARG} "
@@ -129,6 +151,7 @@ ERRORS_RULE: Final = (
 RULES: Final[tuple[str, ...]] = (
     NUMBERS_RULE,
     TOOLS_RULE,
+    ANSWER_FROM_CONTEXT_RULE,
     ARGUMENTS_RULE,
     FORMAT_RULE,
     OFFERS_RULE,
@@ -164,6 +187,32 @@ FRIDAY_PERSONA: Final = (
 )
 """Passed as ``agent_instructions`` (Req 4.1)."""
 
+# --- Supported-indicator catalogue (injected once per session start) --------
+
+INDICATOR_CATALOGUE_HEADER: Final = (
+    "Supported indicators you can fetch (name | aliases | FRED series ID | transformation):"
+)
+"""Header line for the indicator catalogue injected into the model's instructions."""
+
+
+def _indicator_line(entry: IndicatorEntry) -> str:
+    """One catalogue line: name, aliases, series ID, and optional transformation."""
+    aliases = ", ".join(entry.aliases) if entry.aliases else "—"
+    transform = entry.transformation if entry.transformation else "none"
+    return f"- {entry.name} | {aliases} | {entry.series_id} | {transform}"
+
+
+def indicator_catalogue(indicators: IndicatorMap) -> str:
+    """The full indicator catalogue injected as a context-provider instruction.
+
+    Lists every supported indicator with its canonical name, aliases, FRED series ID, and
+    transformation so the model knows exactly what it can fetch and how to refer to it.
+    Deterministic: reflects the loaded ``IndicatorMap`` exactly.
+    """
+    lines = [_indicator_line(e) for e in indicators.entries]
+    return "\n".join([INDICATOR_CATALOGUE_HEADER, *lines])
+
+
 # --- Per-run Dataset inventory (Req 8.4) ------------------------------------
 
 INVENTORY_HEADER: Final = "Datasets in this session (oldest first):"
@@ -172,9 +221,22 @@ MOST_RECENT_MARK: Final = "[most recent]"
 EMPTY_RANGE_TEXT: Final = "no dates"
 
 
-def _missing_text(count: int) -> str:
-    """ "1 missing value" or "N missing values"."""
-    return f"{count} missing value" if count == 1 else f"{count} missing values"
+def _missing_text(ds: Dataset) -> str:
+    """ "1 missing value (2026-08-01)" / "N missing values (dates...)" / "0 missing values".
+
+    Names the gap dates (up to ``MAX_MISSING_DATES_LISTED``) so the model can say where the
+    gaps are from the inventory alone, without re-running a tool.
+    """
+    count = ds.missing_count
+    noun = "missing value" if count == 1 else "missing values"
+    if count == 0:
+        return f"0 {noun}"
+    dates = ds.missing_dates
+    listed = [day.isoformat() for day in dates[:MAX_MISSING_DATES_LISTED]]
+    shown = ", ".join(listed)
+    if len(dates) > len(listed):
+        shown = f"{shown}, and more"
+    return f"{count} {noun} ({shown})"
 
 
 def _range_text(ds: Dataset) -> str:
@@ -198,7 +260,7 @@ def dataset_line(ds: Dataset, *, most_recent: bool) -> str:
     mark = f" {MOST_RECENT_MARK}" if most_recent else ""
     return (
         f"- {ds.dataset_id}: {ds.indicator} ({ds.series_id}), {rows}, {_range_text(ds)}, "
-        f"{_missing_text(ds.missing_count)}{_lineage_text(ds)}{mark}"
+        f"{_missing_text(ds)}{_lineage_text(ds)}{mark}"
     )
 
 

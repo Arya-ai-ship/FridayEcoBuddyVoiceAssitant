@@ -112,7 +112,7 @@ def build_container(
     tools = ToolRegistry(fred_source, renderer, indicators)
     history = InMemoryHistoryProvider()
     middleware = FridayMiddleware.build(tools, tts_client, make_llm_error_mapper(redactor))
-    harness: HarnessAgent = build_harness_agent(client, tools, middleware, history)
+    harness: HarnessAgent = build_harness_agent(client, tools, middleware, history, indicators)
     agent = Agent(harness, tts_client, history, redactor)
     sessions = SessionStore(lambda: _new_agent_session(harness))
 

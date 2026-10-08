@@ -101,6 +101,10 @@ YOY_LAG_ROWS: Final = 12
 PREVIEW_ROWS: Final = 10
 """Rows shown in a Preview_Table (Req 7.1)."""
 
+MAX_MISSING_DATES_LISTED: Final = 24
+"""Most Missing_Value dates listed in a tool result or the inventory before truncating, so
+the model can name where the gaps are without an unbounded payload."""
+
 PREVIEW_DECIMALS: Final = 4
 """Maximum decimals for Preview_Table display values."""
 

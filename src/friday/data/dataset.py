@@ -74,6 +74,14 @@ class Dataset:
         """Number of rows whose value is a Missing_Value."""
         return int(np.count_nonzero(np.isnan(self.values)))
 
+    @property
+    def missing_dates(self) -> tuple[date, ...]:
+        """The dates of the rows whose value is a Missing_Value, in ascending order."""
+        gaps = np.isnan(self.values)
+        return tuple(
+            day for day, is_missing in zip(self.dates, gaps.tolist(), strict=True) if is_missing
+        )
+
 
 class SessionView(Protocol):
     """Read-only view of a Session's Datasets for pure code (narration, prompts).

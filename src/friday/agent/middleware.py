@@ -40,11 +40,12 @@ from agent_framework import (
 )
 
 from friday.agent import narration
-from friday.agent.prompts import dataset_inventory
+from friday.agent.prompts import dataset_inventory, indicator_catalogue
 from friday.agent.templates import OUTCOME_TEXTS, TOOL_NAMES, ToolName
 from friday.agent.tool_runs import ToolOutcome, to_json
 from friday.agent.tools import ToolRegistry
 from friday.constants import LLM_TIMEOUT_S, MAX_STATUS_WORDS, MAX_TOOL_CALLS
+from friday.data.indicators import IndicatorMap
 from friday.errors import AwsCredentialError, FridayError, ToolError, TTSError
 from friday.events import AudioErrorKind, Event, Phase, TurnEvents, audio_error_kind
 from friday.ports import TTSClient
@@ -63,6 +64,9 @@ _NO_DATA_TOOLS: Final = frozenset({"describe_data", "fill_missing", "plot_data"}
 
 _INVENTORY_SOURCE: Final = "friday_inventory"
 """Context-provider source id for the per-run Dataset inventory."""
+
+_CATALOGUE_SOURCE: Final = "friday_indicator_catalogue"
+"""Context-provider source id for the supported-indicator catalogue."""
 
 
 # --- Turn context -----------------------------------------------------------
@@ -284,6 +288,30 @@ class ChatGuard(ChatMiddleware):
 
 
 # --- Context provider --------------------------------------------------------
+
+
+class IndicatorMapProvider(ContextProvider):
+    """Adds the supported-indicator catalogue to the instructions before each model call.
+
+    The catalogue lists every fetchable indicator with its canonical name, aliases, FRED
+    series ID, and transformation, so the model knows exactly what it can pull without
+    guessing or hallucinating indicator names.
+    """
+
+    def __init__(self, indicators: IndicatorMap) -> None:
+        super().__init__(_CATALOGUE_SOURCE)
+        self._indicators = indicators
+
+    async def before_run(
+        self,
+        *,
+        agent: object,
+        session: object,
+        context: SessionContext,
+        state: dict[str, Any],
+    ) -> None:
+        """Inject the indicator catalogue before every model call."""
+        context.extend_instructions(self.source_id, indicator_catalogue(self._indicators))
 
 
 class DatasetInventoryProvider(ContextProvider):

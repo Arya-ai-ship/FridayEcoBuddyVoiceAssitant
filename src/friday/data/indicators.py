@@ -104,7 +104,7 @@ def load_indicator_map(path: str | Path | None) -> IndicatorMap:
 
 
 def default_indicator_map() -> IndicatorMap:
-    """Return the packaged Default_Indicator_Map of 10 monthly Indicators (Req 6.14)."""
+    """Return the packaged Default_Indicator_Map of 11 Indicators (Req 6.14)."""
     return load_indicator_map(None)
 
 

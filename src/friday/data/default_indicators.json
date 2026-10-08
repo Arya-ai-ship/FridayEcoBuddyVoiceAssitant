@@ -64,6 +64,12 @@
       "aliases": ["industrial production index", "ip index"],
       "series_id": "INDPRO",
       "transformation": null
+    },
+    {
+      "name": "gdp",
+      "aliases": ["gross domestic product", "real gdp", "real gross domestic product"],
+      "series_id": "GDPC1",
+      "transformation": null
     }
   ]
 }

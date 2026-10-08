@@ -22,9 +22,15 @@ from agent_framework import (
     create_harness_agent,
 )
 
-from friday.agent.middleware import DatasetInventoryProvider, FridayMiddleware, current_turn
+from friday.agent.middleware import (
+    DatasetInventoryProvider,
+    FridayMiddleware,
+    IndicatorMapProvider,
+    current_turn,
+)
 from friday.agent.prompts import FRIDAY_PERSONA, FRIDAY_RULES
 from friday.agent.tools import ToolRegistry
+from friday.data.indicators import IndicatorMap
 
 HARNESS_NAME = "Friday"
 """The harness agent's name; the model identifies itself as Friday (Req 4.1)."""
@@ -35,10 +41,13 @@ def build_harness_agent(
     tools: ToolRegistry,
     middleware: FridayMiddleware,
     history: InMemoryHistoryProvider,
+    indicators: IndicatorMap,
 ) -> Agent:
     """Construct the Friday harness agent (one instance, shared by all Sessions).
 
     ``history`` is Friday's own provider so ``run_turn`` can append messages to a Session.
+    ``indicators`` is passed to ``IndicatorMapProvider`` so the model always knows every
+    supported indicator, its aliases, series ID, and transformation.
     Every opt-in capability is left off; only the four Friday tools and Friday's own
     instructions are exposed to the model.
     """
@@ -49,7 +58,7 @@ def build_harness_agent(
         agent_instructions=FRIDAY_PERSONA,
         tools=tools.function_tools(current_turn),
         history_provider=history,
-        context_providers=[DatasetInventoryProvider()],
+        context_providers=[IndicatorMapProvider(indicators), DatasetInventoryProvider()],
         middleware=[middleware.function, middleware.chat],
         disable_todo=True,
         disable_mode=True,

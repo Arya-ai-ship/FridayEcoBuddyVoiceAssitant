@@ -21,8 +21,10 @@ export class ChatView {
     this._log = logEl;
     this._fetch = deps.fetchImpl ?? globalThis.fetch?.bind(globalThis);
     this._doc = deps.doc ?? globalThis.document;
-    /** @type {Map<string, HTMLElement>} the current Friday message block per turn */
+    /** @type {HTMLElement|null} the current Friday message block per turn */
     this._friday = null;
+    /** @type {HTMLElement|null} the msg-body div inside the current Friday block */
+    this._fridayBody = null;
   }
 
   _el(tag, className, text) {
@@ -40,8 +42,18 @@ export class ChatView {
   /** Append a user message and clear any open Friday block (Req 1.5). */
   addUserMessage(text) {
     const msg = this._el("div", "message user");
-    msg.appendChild(this._el("span", "label", "Boss"));
-    msg.appendChild(this._el("div", "text", text));
+    
+    // Avatar
+    const avatar = this._el("div", "avatar");
+    avatar.textContent = "B";
+    msg.appendChild(avatar);
+    
+    // Message body
+    const body = this._el("div", "msg-body");
+    body.appendChild(this._el("div", "msg-name", "Boss"));
+    body.appendChild(this._el("div", "msg-content", text));
+    msg.appendChild(body);
+    
     this._append(msg);
     this._friday = null;
   }
@@ -49,11 +61,22 @@ export class ChatView {
   _fridayBlock() {
     if (!this._friday) {
       const msg = this._el("div", "message friday");
-      msg.appendChild(this._el("span", "label", "Friday"));
+      
+      // Avatar
+      const avatar = this._el("div", "avatar");
+      avatar.textContent = "F";
+      msg.appendChild(avatar);
+      
+      // Message body
+      const body = this._el("div", "msg-body");
+      body.appendChild(this._el("div", "msg-name", "Friday"));
+      this._fridayBody = body;
+      msg.appendChild(body);
+      
       this._friday = msg;
       this._append(msg);
     }
-    return this._friday;
+    return this._fridayBody;
   }
 
   /** Render one NDJSON event (Req 1.6, 4.x, 7.x, 9.4, 11.6). */
@@ -168,10 +191,11 @@ export class ChatView {
 
   _final(event) {
     const block = this._fridayBlock();
-    if (event.text) block.appendChild(this._el("div", "text", event.text));
+    if (event.text) block.appendChild(this._el("div", "msg-content", event.text));
     if (event.audio_error) this._noticeInline(block);
     this._scroll();
-    this._friday = null; // the turn is done
+    this._friday = null;
+    this._fridayBody = null;
   }
 
   _noticeInline(block) {

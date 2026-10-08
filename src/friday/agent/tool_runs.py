@@ -22,6 +22,7 @@ from typing import Final
 
 from friday.agent.templates import DESCRIBE, FETCH, FILL, PLOT, ToolName
 from friday.agent.tool_args import DescribeArgs, FetchArgs, FillArgs, PlotArgs
+from friday.constants import MAX_MISSING_DATES_LISTED
 from friday.data.dataset import Dataset
 from friday.data.dates import parse_date_range
 from friday.data.fetch import build_dataset, transform
@@ -148,6 +149,7 @@ async def run_fetch(
         "first_date": _iso(dataset.dates[0] if dataset.dates else None),
         "last_date": _iso(dataset.dates[-1] if dataset.dates else None),
         "missing_count": dataset.missing_count,
+        "missing_dates": _missing_dates_field(dataset),
         "transformation": dataset.transformation,
     }
     return ToolOutcome.success(
@@ -207,6 +209,7 @@ async def run_fill(session: Session, args: FillArgs) -> ToolOutcome:
         "row_count": dataset.row_count,
         "filled": result.filled,
         "unfilled": result.unfilled,
+        "missing_dates": _missing_dates_field(dataset),
     }
     return ToolOutcome.success(FILL, fields, dataset, indicator=dataset.indicator)
 
@@ -284,3 +287,13 @@ def _finite(value: float | None) -> float | None:
 
 def _iso(value: date | None) -> str | None:
     return None if value is None else value.isoformat()
+
+
+def _missing_dates_field(dataset: Dataset) -> list[str]:
+    """ISO dates of ``dataset``'s Missing_Values, capped at ``MAX_MISSING_DATES_LISTED``.
+
+    Lets the model name where the gaps are without reading every row. The cap keeps the
+    result bounded; these FRED series carry at most a few gaps in practice.
+    """
+    gaps = dataset.missing_dates
+    return [day.isoformat() for day in gaps[:MAX_MISSING_DATES_LISTED]]
