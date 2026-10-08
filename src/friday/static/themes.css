@@ -1,0 +1,128 @@
+/*
+ * Friday — theme overrides.
+ *
+ * Dark mode tokens live in styles.css :root (those are parity-checked against
+ * style.py). This file only overrides tokens for Light and Dawn; it never
+ * touches :root so the parity test is unaffected.
+ *
+ * Applied via data-theme on <html> by theme.js.
+ *
+ * Orb state colors keep their semantic meanings across themes but shift tone
+ * to match the palette. Surface/border tokens are redefined per theme so
+ * backgrounds, cards, and borders stay readable.
+ */
+
+/* ── Light mode ──────────────────────────────────────────────────────────── */
+
+[data-theme="light"] {
+  /* Core palette */
+  --bg:      #f5f7fa;
+  --text:    #0f172a;
+  --cyan:    #0284c7;   /* sky blue — readable on light bg */
+  --violet:  #7c3aed;   /* deep purple */
+  --magenta: #db2777;   /* vivid pink */
+  --amber:   #d97706;   /* warm amber */
+
+  /* Orb states */
+  --orb-idle:      #94a3b8;
+  --orb-listening: #0284c7;
+  --orb-working:   #d97706;
+  --orb-speaking:  #7c3aed;
+
+  /* Surfaces */
+  --surface-1: #ffffff;
+  --surface-2: #eef2f7;
+  --border:          rgba(15, 23, 42, 0.1);
+  --border-accent:   rgba(2, 132, 199, 0.3);
+  --avatar-user-dark:    rgba(109, 40, 217, 1);
+  --avatar-friday-dark:  rgba(3, 105, 161, 1);
+  --avatar-text:         rgba(255, 255, 255, 1);
+
+  color-scheme: light;
+}
+
+/* ── Dawn mode ───────────────────────────────────────────────────────────── */
+/*
+ * Inspired by the sky at dusk: deep indigo-navy base, warm cream text,
+ * gold as the accent, rose-violet as the secondary. Rich and warm — sits
+ * between dark's cold neon and light's clinical whites.
+ */
+
+[data-theme="dawn"] {
+  /* Core palette */
+  --bg:      #1a1625;   /* deep indigo-navy */
+  --text:    #f0e6d3;   /* warm cream */
+  --cyan:    #e8a838;   /* gold */
+  --violet:  #c084a0;   /* rose-violet */
+  --magenta: #e8607a;   /* coral-rose */
+  --amber:   #f0c060;   /* warm gold */
+
+  /* Orb states */
+  --orb-idle:      #6b5e7a;   /* muted mauve */
+  --orb-listening: #e8a838;   /* gold */
+  --orb-working:   #f0c060;   /* warm gold */
+  --orb-speaking:  #c084a0;   /* rose-violet */
+
+  /* Surfaces */
+  --surface-1: #221d30;   /* slightly lighter than bg */
+  --surface-2: #2c2540;   /* input bg */
+  --border:          rgba(240, 230, 211, 0.08);
+  --border-accent:   rgba(232, 168, 56, 0.25);
+  --avatar-user-dark:    rgba(160, 80, 120, 1);   /* deeper rose-violet */
+  --avatar-friday-dark:  rgba(190, 130, 50, 1);   /* deep gold */
+  --avatar-text:         rgba(26, 22, 37, 1);      /* dark bg color for contrast */
+
+  color-scheme: dark;
+}
+
+/* ── Shared overrides that apply to any non-default theme ────────────────── */
+/*
+ * The orb radial gradient references --bg which changes per theme, so it
+ * needs to be redeclared when the bg changes (the gradient stop is inline).
+ * We re-declare the four state backgrounds here using the per-theme vars so
+ * the gradient bg stop tracks correctly on light and dawn.
+ */
+
+[data-theme="light"] .orb[data-state="idle"],
+[data-theme="dawn"]  .orb[data-state="idle"] {
+  background: radial-gradient(circle at 45% 40%, var(--orb-idle), color-mix(in srgb, var(--bg) 90%, transparent) 72%);
+}
+
+[data-theme="light"] .orb[data-state="listening"],
+[data-theme="dawn"]  .orb[data-state="listening"] {
+  background: radial-gradient(circle at 45% 40%, var(--orb-listening), color-mix(in srgb, var(--bg) 90%, transparent) 72%);
+}
+
+[data-theme="light"] .orb[data-state="working"],
+[data-theme="dawn"]  .orb[data-state="working"] {
+  background: radial-gradient(circle at 45% 40%, var(--orb-working), color-mix(in srgb, var(--bg) 90%, transparent) 72%);
+}
+
+[data-theme="light"] .orb[data-state="speaking"],
+[data-theme="dawn"]  .orb[data-state="speaking"] {
+  background: radial-gradient(circle at 45% 40%, var(--orb-speaking), color-mix(in srgb, var(--bg) 90%, transparent) 72%);
+}
+
+/* Light mode: user bubble uses a subtler tint */
+[data-theme="light"] .message.user .msg-content {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: rgba(124, 58, 237, 0.2);
+}
+
+/* Light mode: Friday border accent */
+[data-theme="light"] .message.friday .msg-body {
+  border-left-color: var(--cyan);
+}
+
+/* Dawn mode: user bubble warm tint */
+[data-theme="dawn"] .message.user .msg-content {
+  background: rgba(192, 132, 160, 0.12);
+  border-color: rgba(192, 132, 160, 0.25);
+}
+
+/* Smooth theme transition (skip for reduced-motion) */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+}

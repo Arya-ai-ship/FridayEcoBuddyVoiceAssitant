@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Friday — Your next-gen eco-buddy</title>
     <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/themes.css" />
+    <!-- Apply saved theme before first paint to avoid flash of wrong theme -->
+    <script>
+      (function () {
+        var t = localStorage.getItem("friday-theme");
+        if (t === "light" || t === "dawn" || t === "dark") {
+          document.documentElement.setAttribute("data-theme", t);
+        }
+      })();
+    </script>
     <script type="module" src="/static/js/app.js"></script>
   </head>
   <body>
@@ -32,6 +42,18 @@
       </div>
 
       <div class="sidebar-bottom">
+        <!-- Theme cycle button -->
+        <button
+          id="theme-button"
+          class="theme-btn"
+          type="button"
+          aria-label="Switch to Light mode"
+          title="Switch to Light mode"
+        >
+          <span class="theme-icon" aria-hidden="true">☀️</span>
+          <span class="theme-label">Light mode</span>
+        </button>
+
         <p class="hint">Type below or tap the mic<br />to talk with Friday.</p>
       </div>
     </aside>

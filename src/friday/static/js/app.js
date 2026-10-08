@@ -12,6 +12,7 @@ import { ChatView } from "./chat.js";
 import { validateSubmission } from "./input.js";
 import { MicRecorder } from "./mic.js";
 import { INITIAL_STATE, reduce } from "./state.js";
+import { applyTheme, loadTheme, nextTheme, updateButton } from "./theme.js";
 
 const MIC_REQUIRED =
   "Boss, microphone access is required for voice input. You can still type your request.";
@@ -48,6 +49,13 @@ class App {
     this._sendButton = doc.getElementById("send-button");
     this._micButton = doc.getElementById("mic-button");
     this._notice = doc.getElementById("notice");
+    this._themeButton = doc.getElementById("theme-button");
+
+    // Apply persisted theme immediately (also set by the inline script in HTML,
+    // but we need the reference here to keep the button label in sync).
+    this._theme = loadTheme();
+    applyTheme(this._theme);
+    if (this._themeButton) updateButton(this._themeButton, this._theme);
 
     this._chat = new ChatView(this._log);
     this._audio = new AudioPlayer(makeAudioContext, {
@@ -65,10 +73,11 @@ class App {
   start() {
     this._input.addEventListener("keydown", (e) => this._onKeydown(e));
     this._form.addEventListener("submit", (e) => {
-      e.preventDefault(); // never navigate; the Send button and Enter share _submitTyped
+      e.preventDefault();
       this._submitTyped();
     });
     this._micButton.addEventListener("click", () => this._onMicClick());
+    this._themeButton?.addEventListener("click", () => this._cycleTheme());
     this._doc.defaultView?.addEventListener("pagehide", () => endSession(this._sessionId));
     this._render();
   }
@@ -110,6 +119,14 @@ class App {
 
   _clearNotice() {
     this._notice.textContent = "";
+  }
+
+  // --- Theme ---------------------------------------------------------------
+
+  _cycleTheme() {
+    this._theme = nextTheme(this._theme);
+    applyTheme(this._theme);
+    if (this._themeButton) updateButton(this._themeButton, this._theme);
   }
 
   // --- Typed input ---------------------------------------------------------
