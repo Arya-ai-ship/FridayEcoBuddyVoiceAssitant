@@ -18,3 +18,7 @@ htmlcov/
 
 # OS / editors
 .DS_Store
+
+# Hackathon credential docs (contain live keys)
+Team4_AWS_CLI_Kiro_Setup.docx
+*.pem

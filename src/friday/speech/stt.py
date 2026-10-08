@@ -63,8 +63,11 @@ from friday.config import Settings
 from friday.constants import (
     AWS_MAX_ATTEMPTS,
     STT_CHUNK_MS,
+    STT_CLOSE_TIMEOUT_S,
+    STT_EDGE_PAD_MS,
     STT_PACE_FACTOR,
     STT_SAMPLE_RATE_HZ,
+    STT_SILENCE_LEVEL,
     STT_TIMEOUT_S,
 )
 from friday.errors import FridayError, STTError
@@ -196,6 +199,32 @@ def join_transcripts(parts: Sequence[str]) -> str:
     return " ".join(part.strip() for part in parts if part.strip())
 
 
+def trim_silence(
+    pcm16: bytes,
+    sample_rate: int,
+    level: int = STT_SILENCE_LEVEL,
+    pad_ms: int = STT_EDGE_PAD_MS,
+) -> bytes:
+    """Drop leading and trailing near-silence, keeping ``pad_ms`` of audio at each edge.
+
+    The browser ends a recording after a 2 s pause, so the tail is mostly silence; since
+    audio is streamed in real time, trimming it cuts that wait from every request. Audio
+    with no sample at or above ``level`` is returned unchanged (Transcribe then reports
+    an empty transcript). Inner pauses are never touched.
+    """
+    samples = memoryview(pcm16[: len(pcm16) - len(pcm16) % BYTES_PER_SAMPLE]).cast("h")
+    count = len(samples)
+    # Scan inward from each edge only, so the cost is the silence, not the whole clip.
+    start = next((i for i in range(count) if abs(samples[i]) >= level), None)
+    if start is None:
+        return pcm16
+    end = next(i for i in range(count - 1, start - 1, -1) if abs(samples[i]) >= level)
+    pad = sample_rate * pad_ms // 1000
+    first = max(0, start - pad)
+    last = min(count, end + 1 + pad)
+    return pcm16[first * BYTES_PER_SAMPLE : last * BYTES_PER_SAMPLE]
+
+
 # --- Adapter ---------------------------------------------------------------------------
 
 
@@ -253,8 +282,12 @@ class TranscribeSTT:
         """
         if not pcm16:
             raise STTError("stt_empty", "No audio was recorded.")
+        pcm16 = trim_silence(pcm16, sample_rate)
+        # Real-time streaming takes as long as the audio itself, so the budget is the
+        # response timeout plus the time needed to send the clip.
+        send_s = len(pcm16) / BYTES_PER_SAMPLE / sample_rate / self._pace_factor
         try:
-            text = await asyncio.wait_for(self._stream(pcm16, sample_rate), timeout_s)
+            text = await asyncio.wait_for(self._stream(pcm16, sample_rate), timeout_s + send_s)
         except FridayError:
             raise
         except Exception as exc:  # CancelledError is a BaseException and propagates.
@@ -295,11 +328,14 @@ class TranscribeSTT:
                 _, receiver = await stream.await_output()
                 parts = await _receive_final(receiver)
         finally:
+            # Each close is bounded: on a stalled stream close() waits for buffered audio
+            # to drain, which never happens, and would otherwise block the request (and
+            # its timeout's cancellation) forever.
             if receiver is not None:
                 with suppress(Exception):
-                    await receiver.close()
+                    await asyncio.wait_for(receiver.close(), STT_CLOSE_TIMEOUT_S)
             with suppress(Exception):  # Idempotent; already closed on the normal path.
-                await stream.input_stream.close()
+                await asyncio.wait_for(stream.input_stream.close(), STT_CLOSE_TIMEOUT_S)
         return join_transcripts(parts)
 
     async def _send_audio(self, publisher: AudioPublisher, pcm16: bytes, sample_rate: int) -> None:

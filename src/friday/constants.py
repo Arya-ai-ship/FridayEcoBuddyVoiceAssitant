@@ -59,8 +59,18 @@ STT_SAMPLE_RATE_HZ: Final = 16000
 STT_CHUNK_MS: Final = 100
 """Audio chunk length streamed to Transcribe, in milliseconds."""
 
-STT_PACE_FACTOR: Final = 4.0
-"""Streaming speed relative to real time (60 s of audio takes about 15 s)."""
+STT_PACE_FACTOR: Final = 1.0
+"""Streaming speed relative to real time. Transcribe applies backpressure: sending faster
+(1.5x or more) stalls the stream after about 3.6 s of audio, so stream in real time."""
+
+STT_CLOSE_TIMEOUT_S: Final = 3.0
+"""Bound on closing the Transcribe input stream, so a stalled stream cannot hang a request."""
+
+STT_SILENCE_LEVEL: Final = 330
+"""PCM16 amplitude (about 1% of full scale) below which edge samples count as silence."""
+
+STT_EDGE_PAD_MS: Final = 300
+"""Audio kept before the first and after the last non-silent sample when trimming."""
 
 MIC_MAX_S: Final = 60
 """Recording auto-stops after this many seconds (Req 3.8)."""
