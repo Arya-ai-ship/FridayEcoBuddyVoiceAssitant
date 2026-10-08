@@ -1,0 +1,69 @@
+{
+  "indicators": [
+    {
+      "name": "cpi",
+      "aliases": ["consumer price index", "cpi-u", "headline cpi"],
+      "series_id": "CPIAUCSL",
+      "transformation": null
+    },
+    {
+      "name": "inflation",
+      "aliases": ["inflation rate", "cpi inflation", "yoy inflation"],
+      "series_id": "CPIAUCSL",
+      "transformation": "yoy"
+    },
+    {
+      "name": "core cpi",
+      "aliases": ["core consumer price index", "cpi less food and energy"],
+      "series_id": "CPILFESL",
+      "transformation": null
+    },
+    {
+      "name": "unemployment rate",
+      "aliases": ["unemployment", "jobless rate"],
+      "series_id": "UNRATE",
+      "transformation": null
+    },
+    {
+      "name": "nonfarm payrolls",
+      "aliases": ["payrolls", "nfp", "total nonfarm employment"],
+      "series_id": "PAYEMS",
+      "transformation": null
+    },
+    {
+      "name": "fed funds rate",
+      "aliases": ["federal funds rate", "fed funds", "effective federal funds rate"],
+      "series_id": "FEDFUNDS",
+      "transformation": null
+    },
+    {
+      "name": "10-year treasury yield",
+      "aliases": [
+        "10 year treasury yield",
+        "10-year yield",
+        "10y yield",
+        "ten-year treasury yield"
+      ],
+      "series_id": "GS10",
+      "transformation": null
+    },
+    {
+      "name": "housing prices",
+      "aliases": ["home prices", "house prices", "case-shiller", "case-shiller index"],
+      "series_id": "CSUSHPINSA",
+      "transformation": null
+    },
+    {
+      "name": "housing starts",
+      "aliases": ["new housing starts", "housing units started"],
+      "series_id": "HOUST",
+      "transformation": null
+    },
+    {
+      "name": "industrial production",
+      "aliases": ["industrial production index", "ip index"],
+      "series_id": "INDPRO",
+      "transformation": null
+    }
+  ]
+}

@@ -1,0 +1,332 @@
+/*
+ * Friday Dark_Theme.
+ * The :root color tokens mirror friday/style.py (UI_TOKENS); tests/test_parity.py
+ * checks them. Use var(--token) everywhere else instead of literal colors.
+ */
+
+:root {
+  --bg: #0A0E17;
+  --text: #E6F1FF;
+  --cyan: #00E5FF;
+  --violet: #B388FF;
+  --magenta: #FF4FD8;
+  --amber: #FFD740;
+  --orb-idle: #5B6B8C;
+  --orb-listening: #00E5FF;
+  --orb-working: #FFD740;
+  --orb-speaking: #B388FF;
+
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Header --------------------------------------------------------------- */
+
+.app-header {
+  padding: 1rem 1.5rem 0.5rem;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: 0.04em;
+  color: var(--cyan);
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+}
+
+.tagline {
+  margin: 0.15rem 0 0;
+  color: var(--violet);
+  font-size: 0.95rem;
+}
+
+/* --- Layout --------------------------------------------------------------- */
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr minmax(180px, 240px);
+  gap: 1rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1rem 1.5rem;
+}
+
+.chat-window {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+}
+
+.orb-pane {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Messages ------------------------------------------------------------- */
+
+.message {
+  max-width: 90%;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  line-height: 1.45;
+}
+
+.message .label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.3rem;
+  opacity: 0.9;
+}
+
+.message.user {
+  align-self: flex-end;
+}
+
+.message.user .label {
+  color: var(--violet);
+}
+
+.message.friday {
+  align-self: flex-start;
+  border-left: 3px solid var(--cyan);
+  box-shadow: -4px 0 16px -10px var(--cyan);
+}
+
+.message.friday .label {
+  color: var(--cyan);
+}
+
+.status-chip {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: var(--amber);
+  opacity: 0.85;
+}
+
+.status-chip.error {
+  color: var(--magenta);
+}
+
+.notice {
+  margin: 0;
+  padding: 0 1.5rem 1rem;
+  color: var(--amber);
+  min-height: 1.2em;
+}
+
+/* --- Tables and charts ---------------------------------------------------- */
+
+.data-table {
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid rgba(230, 241, 255, 0.15);
+  padding: 0.2rem 0.5rem;
+  text-align: right;
+}
+
+.csv-link {
+  color: var(--cyan);
+  margin-left: 0.5rem;
+}
+
+.chart-image {
+  max-width: 100%;
+  height: auto;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+}
+
+/* --- Composer ------------------------------------------------------------- */
+
+.composer {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-top: 1px solid rgba(0, 229, 255, 0.15);
+}
+
+.chat-input {
+  flex: 1 1 auto;
+  resize: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border: 1px solid rgba(230, 241, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  min-height: 2.6rem;
+  max-height: 8rem;
+}
+
+.mic-button {
+  flex: 0 0 auto;
+  width: 2.8rem;
+  background: rgba(0, 229, 255, 0.08);
+  color: var(--text);
+  border: 1px solid var(--cyan);
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.mic-button[aria-pressed="true"] {
+  background: var(--cyan);
+  color: var(--bg);
+  animation: mic-live 1.2s ease-in-out infinite;
+}
+
+@keyframes mic-live {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(0, 229, 255, 0);
+  }
+}
+
+.send-button {
+  flex: 0 0 auto;
+  width: 2.8rem;
+  background: rgba(179, 136, 255, 0.1);
+  color: var(--violet);
+  border: 1px solid var(--violet);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.send-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-button[aria-pressed="true"] {
+    animation: none;
+  }
+}
+
+/* Visible neon focus ring (Req 14.6). */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+}
+
+/* --- Voice_Orb (Req 2.2-2.6, 14.3) --------------------------------------- */
+
+.orb {
+  --level: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    var(--orb-idle),
+    rgba(10, 14, 23, 0.9) 70%
+  );
+  transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+/* idle: static, no animation or glow (Req 2.2). */
+.orb[data-state="idle"] {
+  background: radial-gradient(circle at 50% 50%, var(--orb-idle), rgba(10, 14, 23, 0.9) 70%);
+}
+
+/* listening/speaking: size and glow scale with --level (Req 2.3, 2.5). */
+.orb[data-state="listening"] {
+  background: radial-gradient(circle at 50% 50%, var(--orb-listening), rgba(10, 14, 23, 0.9) 70%);
+  transform: scale(calc(1 + var(--level) * 0.3));
+  box-shadow: 0 0 calc(12px + var(--level) * 48px) var(--orb-listening);
+}
+
+.orb[data-state="speaking"] {
+  background: radial-gradient(circle at 50% 50%, var(--orb-speaking), rgba(10, 14, 23, 0.9) 70%);
+  transform: scale(calc(1 + var(--level) * 0.3));
+  box-shadow: 0 0 calc(12px + var(--level) * 48px) var(--orb-speaking);
+}
+
+/* working: fixed 1.5 s pulse, independent of any audio level (Req 2.4). */
+.orb[data-state="working"] {
+  background: radial-gradient(circle at 50% 50%, var(--orb-working), rgba(10, 14, 23, 0.9) 70%);
+  animation: orb-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes orb-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 12px var(--orb-working);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--orb-working);
+    transform: scale(1.12);
+  }
+}
+
+/* Reduced motion: four static colors, no animation or scaling (Req 2.x, 14.6). */
+@media (prefers-reduced-motion: reduce) {
+  .orb {
+    transition: none;
+  }
+  .orb[data-state="idle"] {
+    background: var(--orb-idle);
+  }
+  .orb[data-state="listening"] {
+    background: var(--orb-listening);
+    transform: none;
+    box-shadow: none;
+    animation: none;
+  }
+  .orb[data-state="working"] {
+    background: var(--orb-working);
+    transform: none;
+    box-shadow: none;
+    animation: none;
+  }
+  .orb[data-state="speaking"] {
+    background: var(--orb-speaking);
+    transform: none;
+    box-shadow: none;
+    animation: none;
+  }
+}

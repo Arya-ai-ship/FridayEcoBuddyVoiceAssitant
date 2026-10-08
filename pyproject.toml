@@ -1,0 +1,116 @@
+[project]
+name = "friday"
+version = "0.1.0"
+description = "Friday: your next-gen eco-buddy. A local voice and chat assistant for US economic data."
+requires-python = ">=3.12"
+# Every dependency is pinned with == and locked in uv.lock.
+# STT: the AWS streaming SDK `aws-sdk-transcribe-streaming[awscrt]` installs and imports on
+# Python 3.14, so the `amazon-transcribe` fallback is not used.
+dependencies = [
+    "fastapi==0.142.2",
+    "uvicorn==0.54.0",
+    "pydantic==2.13.5",
+    "python-dotenv==1.2.4",
+    "httpx==0.28.1",
+    "boto3==1.43.108",
+    "numpy==2.5.3",
+    "matplotlib==3.11.2",
+    "aws-sdk-transcribe-streaming[awscrt]==0.11.0",
+    # Agent harness (Microsoft Agent Framework). The Bedrock provider is a pre-release;
+    # its exact == pin lets uv resolve it without a global pre-release flag.
+    "agent-framework-core==1.20.0",
+    "agent-framework-bedrock==1.0.0b261002",
+]
+
+[project.scripts]
+friday = "friday.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "hypothesis==6.168.5",
+    "pytest-cov==7.1.0",
+    "ruff==0.16.10",
+    "pyright==1.1.414",
+    "pre-commit==4.6.2",
+    # Typing stubs (dev only)
+    "boto3-stubs[bedrock-runtime,polly,sts]==1.43.108",
+    "botocore-stubs==1.43.67",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/friday"]
+
+# ---------------------------------------------------------------------------
+# Lint / format
+# ---------------------------------------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+# Ruff also formats Markdown code blocks; keep it to Python sources (spec docs and README excluded).
+extend-exclude = [".kiro", "*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+# ---------------------------------------------------------------------------
+# Type checking: strict everywhere in src/. Adapter modules that wrap untyped
+# SDKs (boto3 clients, transcribe streaming, matplotlib) only downgrade the two
+# stub-related rules to warnings; the domain layer stays fully strict.
+# ---------------------------------------------------------------------------
+[tool.pyright]
+include = ["src"]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+
+[[tool.pyright.executionEnvironments]]
+root = "src/friday/llm"
+reportMissingTypeStubs = "warning"
+reportUnknownMemberType = "warning"
+
+[[tool.pyright.executionEnvironments]]
+root = "src/friday/speech"
+reportMissingTypeStubs = "warning"
+reportUnknownMemberType = "warning"
+
+[[tool.pyright.executionEnvironments]]
+root = "src/friday/data/plot.py"
+reportMissingTypeStubs = "warning"
+reportUnknownMemberType = "warning"
+
+[[tool.pyright.executionEnvironments]]
+root = "src/friday/check.py"
+reportMissingTypeStubs = "warning"
+reportUnknownMemberType = "warning"
+
+[[tool.pyright.executionEnvironments]]
+root = "src"
+
+# ---------------------------------------------------------------------------
+# Tests and coverage
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "--cov=friday --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["friday"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+# Advisory target: >= 85% on friday/data and friday/agent (no fail_under).

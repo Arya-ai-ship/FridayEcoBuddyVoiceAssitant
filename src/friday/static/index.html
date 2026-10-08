@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Friday — Your next-gen eco-buddy</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script type="module" src="/static/js/app.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Friday</h1>
+      <p class="tagline">Your next-gen eco-buddy</p>
+    </header>
+
+    <main class="layout">
+      <section
+        id="chat-log"
+        class="chat-window"
+        role="log"
+        aria-live="polite"
+        aria-label="Conversation with Friday"
+      ></section>
+
+      <aside class="orb-pane">
+        <div
+          id="voice-orb"
+          class="orb"
+          role="img"
+          data-state="idle"
+          aria-label="Friday is idle"
+        ></div>
+      </aside>
+    </main>
+
+    <form id="composer" class="composer" aria-label="Send a message to Friday">
+      <label class="visually-hidden" for="chat-input">Message Friday</label>
+      <textarea
+        id="chat-input"
+        class="chat-input"
+        rows="1"
+        maxlength="2000"
+        placeholder="Ask Friday to pull an indicator, e.g. please pull inflation"
+        autocomplete="off"
+        enterkeyhint="send"
+      ></textarea>
+      <button id="send-button" class="send-button" type="submit" aria-label="Send message">
+        <span aria-hidden="true">➤</span>
+      </button>
+      <button
+        id="mic-button"
+        class="mic-button"
+        type="button"
+        aria-pressed="false"
+        aria-label="Start voice input"
+        title="Talk to Friday"
+      >
+        <span aria-hidden="true">🎙</span>
+      </button>
+    </form>
+
+    <p id="notice" class="notice" role="status" aria-live="polite"></p>
+  </body>
+</html>
