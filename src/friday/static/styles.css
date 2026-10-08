@@ -29,16 +29,16 @@
   --radius-lg: 18px;
   --sidebar-w: 240px;
 
-  color-scheme: dark;
-}
-
-/* Derived surface tokens — local aliases, not parity-tracked. */
-:where(body) {
+  /* Derived surface tokens — not parity-tracked.
+     On :root so [data-theme] on <html> can override them via the cascade. */
   --surface-1: rgba(17, 24, 39, 1);
   --surface-2: rgba(26, 34, 53, 1);
-  --avatar-user-dark: rgba(123, 94, 167, 1);   /* darker violet for user avatar gradient */
-  --avatar-friday-dark: rgba(0, 153, 184, 1);  /* darker cyan for Friday avatar gradient */
-  --avatar-text: rgba(255, 255, 255, 1);        /* avatar letter color */
+  --composer-bg: rgba(10, 14, 23, 0.7);
+  --avatar-user-dark: rgba(123, 94, 167, 1);
+  --avatar-friday-dark: rgba(0, 153, 184, 1);
+  --avatar-text: rgba(255, 255, 255, 1);
+
+  color-scheme: dark;
 }
 
 /* ── Reset ────────────────────────────────────────────────────────────────── */
@@ -430,7 +430,7 @@ body {
   gap: 0.5rem;
   padding: 0.75rem 1.5rem 1rem;
   border-top: 1px solid var(--border);
-  background: rgba(10, 14, 23, 0.7);
+  background: var(--composer-bg, rgba(10, 14, 23, 0.7));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }

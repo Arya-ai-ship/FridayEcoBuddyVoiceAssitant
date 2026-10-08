@@ -17,14 +17,14 @@ const STORAGE_KEY = "friday-theme";
 const CYCLE = /** @type {Theme[]} */ (["light", "dawn", "dark"]);
 
 /**
- * Human label and icon shown ON the button (describes the mode you'll switch
- * TO, matching the convention used by most apps).
+ * Human label and icon shown ON the button — describes the CURRENT mode
+ * so the user always knows which mode they're in.
  * @type {Record<Theme, { label: string; icon: string }>}
  */
 const BUTTON_META = {
-  light: { icon: "🌅", label: "Dawn mode" },
-  dawn:  { icon: "🌙", label: "Dark mode" },
-  dark:  { icon: "☀️",  label: "Light mode" },
+  dark:  { icon: "🌙", label: "Dark mode" },
+  dawn:  { icon: "🌅", label: "Dawn mode" },
+  light: { icon: "☀️",  label: "Light mode" },
 };
 
 /** Return the next theme in the cycle. */
@@ -45,11 +45,13 @@ export function applyTheme(theme, doc = globalThis.document) {
   globalThis.localStorage?.setItem(STORAGE_KEY, theme);
 }
 
-/** Update the toggle button's icon and accessible label. */
+/** Update the toggle button's icon, text label, and accessible label. */
 export function updateButton(btn, currentTheme) {
   const meta = BUTTON_META[currentTheme];
-  btn.setAttribute("aria-label", `Switch to ${meta.label}`);
-  btn.title = `Switch to ${meta.label}`;
+  btn.setAttribute("aria-label", `${meta.label} — click to switch`);
+  btn.title = `${meta.label} — click to switch`;
   const icon = btn.querySelector(".theme-icon");
   if (icon) icon.textContent = meta.icon;
+  const label = btn.querySelector(".theme-label");
+  if (label) label.textContent = meta.label;
 }
