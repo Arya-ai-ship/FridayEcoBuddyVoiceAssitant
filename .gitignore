@@ -1,24 +1,6 @@
-# Secrets
+# Secrets — never commit
 .env
 .env.*
 !.env.example
-
-# Python / tooling
-.venv/
-__pycache__/
-*.py[cod]
-*.egg-info/
-.pytest_cache/
-.hypothesis/
-.ruff_cache/
-.coverage
-coverage.xml
-htmlcov/
-.pyright/
-
-# OS / editors
-.DS_Store
-
-# Hackathon credential docs (contain live keys)
-Team4_AWS_CLI_Kiro_Setup.docx
 *.pem
+Team4_AWS_CLI_Kiro_Setup.docx
